@@ -1,0 +1,61 @@
+before:
+  hooks:
+    - go generate -v ./...
+builds:
+- id: afvosvr
+  env:
+  - CGO_ENABLED=0
+  main: server.go
+  binary: afvosvr
+  ldflags:
+  - -s -w -X github.com/bhojpur/afvo/cmd/server.version={{.Version}}-{{.ShortCommit}}
+- id: afvoctl
+  env:
+  - CGO_ENABLED=0
+  main: client.go
+  binary: afvoctl
+  flags:
+    - -tags=afvoctl
+  ldflags:
+  - -s -w -X github.com/bhojpur/afvo/cmd/client.version={{.Version}}-{{.ShortCommit}}
+archives:
+- id: afvosvr
+  replacements:
+    darwin: Darwin
+    linux: Linux
+    386: i386
+    amd64: x86_64
+  builds:
+  - afvosvr
+- id: afvoctl
+  files:
+  - "none*"
+  format: binary
+  builds:
+  - afvoctl
+  replacements:
+    darwin: Darwin
+    linux: Linux
+    386: i386
+    amd64: x86_64
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
+release:
+  prerelease: auto
+dockers:
+  - goos: linux
+    goarch: amd64
+    goarm: ''
+    dockerfile: Dockerfile
+    image_templates:
+    - "ghcr.io/bhojpur/afvo:{{ .Tag }}"
+    extra_files:
+    - README.md
